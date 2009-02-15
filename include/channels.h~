@@ -1,0 +1,10 @@
+#ifndef _CHANNELS_H
+#define _CHANNELS_H
+
+void launchTitle(u64 titleID, char* name, int need_sys);
+void deleteChannel(u64 titleID);
+void channelToSD(u32 TitleIDH, u32 TitleIDL, char* titleName, char* destdir);
+void ChannelLauncher();
+
+#endif //_CHANNELS_H
+

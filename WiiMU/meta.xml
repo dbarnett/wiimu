@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+  <name>WiiMU</name>
+  <coder>SquidMan</coder>
+  <version>0.1alpha4</version>
+  <short_description>Wii Menu Replacement</short_description> 
+  <long_description>A System Menu Replacement which aims to completely replace the current System Menu.
+Changelog:
+0.1a4:
+* Added Configuration Modification! Thanks tona for sysconf.c!
+* Added option to dump without ECC for use with Zestig.
+* Translated most menus to the 7 Wii languages.
+* Allows you to choose which IOS to load games with.
+* Code cleanup.
+* TODO: Added ability to change Channel Names.
+* TODO: You can copy channel contents to SD Card. TO WAREZ HEADS: This doesn't contain enough data to make a WAD, so stfu.
+
+0.1a3:
+* Lots of stuff this release!
+* Fixes the bug which caused certain users to not get channel lists.
+* Adds a Save Manager which currently lists the save files. Copying currently does not work.
+* Adds a configuration menu, which, at this current point only displays the configuration.
+* Cleans up a lot of code.
+* Lots of thanks to crediar, who worked on a lot of stuff while I was taking a break from the scene.
+
+0.1a2:
+* Fixes a bug in which PAL users would be switched to NTSC
+* (Hopefully) Fixes a bug which cause users of Firmwares other than 3.2U to not be able to grab the channel list.
+* Adds a main menu.
+* Adds a NAND Dumper (Thanks Redbird!)
+* Adds some wiilight functions.
+
+0.1a:
+* First release.
+* Uses Wiimote.
+* Launches Channels through a text interface.
+</long_description> 
+</app>
