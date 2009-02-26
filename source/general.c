@@ -11,6 +11,7 @@
 #include <wiiuse/wpad.h>
 #include <fat.h>
 #include <gcmodplay.h>
+#include <unistd.h>
 
 #include "screen.h"
 #include "cleanup.h"

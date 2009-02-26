@@ -32,8 +32,8 @@ int _squidlight_kill=0;
 int _squidlight_original_level=0;
 
 void _wiilight_turn(int enable);
-static void * _wiilight_loop(void *arg);
-static vu32 *_wiilight_reg = (u32*)0xCD0000C0;
+//static void * _wiilight_loop(void *arg);
+//static vu32 *_wiilight_reg = (u32*)0xCD0000C0;
 lwp_t _wiilight_thread;
 lwp_t _squidlight_thread;
 
@@ -117,7 +117,7 @@ void WIILIGHT_Toggle(){
 	}else{
 		WIILIGHT_TurnOn();
 	}
-	
+
 }
 
 // 
@@ -224,7 +224,7 @@ void WIILIGHT_Toggle(){}
 // specified by SetLevel()
 //
 
-static void * _wiilight_loop(void *arg){return NULL;}
+//static void * _wiilight_loop(void *arg){return NULL;}
 
 // My stuff now :)
 

@@ -1165,7 +1165,7 @@ void changeChannelName(u64 titleID)
 	{
 		tmd_content *TMDc = TMD_CONTENTS(((tmd*)(SIGNATURE_PAYLOAD(TMD))));		// OH GOD CREDIAR, WTF WAS THAT MESS!!!
 		//printf("%d,",TMDc->index);
-		s32 cfd = ES_OpenTitleContent( titleID, views, TMDc->index);
+		s32 cfd = ES_OpenTitleContent( titleID, TMDc->index);
 		free(views);
 		if(CheckESRetval(cfd)!=0)
 		{	

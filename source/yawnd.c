@@ -251,7 +251,7 @@ char *getDeviceName(tDevice dev)
 
 char getDeviceNum(tDevice dev)
 {
-	char part[]= {PI_INTERNAL_SD};//, PI_USBSTORAGE};	// Accoding to PARTITION_INTERFACE
+	char part[]= {"sd"};//, PI_USBSTORAGE};	// Accoding to PARTITION_INTERFACE
 	
 	return part[dev];
 }

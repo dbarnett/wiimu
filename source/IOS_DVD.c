@@ -13,7 +13,7 @@ int di_fd=0;
 
 u8 inbuf[0x20] ALIGNED(0x20);
 u8 outbuf[0x20] ALIGNED(0x20);
-u8 *buffer=(void*)0x93000000;
+ioctlv *buffer=(void*)0x93000000;
 
 int DVDInit( void )
 {
@@ -117,7 +117,7 @@ int DVDLowOpenPartition( unsigned int offset )
 	((u32*)buffer)[(0x40>>2)+1]	=  offset>>2;
 
 	//in
-	((u32*)buffer)[0x00] = PHYSADDR(buffer+0x40);	//0x00
+	((u32*)buffer)[0x00] = *((unsigned long *)(0x7FFFFFFF & ((unsigned long)(buffer+0x40))));
 	((u32*)buffer)[0x01] = 0x20;					//0x04
 	((u32*)buffer)[0x02] = 0;						//0x08
 	((u32*)buffer)[0x03] = 0x2A4;					//0x0C 
@@ -125,9 +125,9 @@ int DVDLowOpenPartition( unsigned int offset )
 	((u32*)buffer)[0x05] = 0;						//0x14
 
 	//out
-	((u32*)buffer)[0x06] = PHYSADDR(buffer+0x380);	//0x18
+	((u32*)buffer)[0x06] = *((unsigned long *)(0x7FFFFFFF & ((unsigned long)(buffer+0x380))));	//0x18
 	((u32*)buffer)[0x07] = 0x49E4;					//0x1C
-	((u32*)buffer)[0x08] = PHYSADDR(buffer+0x360);	//0x20
+	((u32*)buffer)[0x08] = *((unsigned long *)(0x7FFFFFFF & ((unsigned long)(buffer+0x360))));	//0x20
 	((u32*)buffer)[0x09] = 0x20;					//0x24
 
 	DCFlushRange(buffer, 0x100);

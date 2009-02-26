@@ -4,7 +4,7 @@
 #include <malloc.h>
 #include <ogcsys.h>
 #include <gccore.h>
-#include <update.h>
+//#include <update.h>
 #include <network.h>
 /*
 #include "updater.h"

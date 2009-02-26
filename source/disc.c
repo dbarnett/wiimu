@@ -61,7 +61,7 @@ int LoadGCGame()		// HUGE THANKS to emu_kidid who wrote this.
 
 void LoadWiiGame()		// DVD Loader! HUGE thanks to crediar who did absolutely all the work.
 {
-	u8 *buffer=(void*)0x93000000;
+	ioctlv *buffer=(void*)0x93000000;
 	int game_partition_offset=0;
 
 	void	(*app_init)(void (*report)(const char *fmt, ...));
@@ -299,7 +299,7 @@ void LoadWiiGame()		// DVD Loader! HUGE thanks to crediar who did absolutely all
 	((u32*)buffer)[(0x40>>2)+1]	=  game_partition_offset>>2;
 
 	//in
-	((u32*)buffer)[0x00] = PHYSADDR(buffer+0x40);	//0x00
+	((u32*)buffer)[0x00] = *((unsigned long *)(0x7FFFFFFF & ((unsigned long)(buffer+0x40))));
 	((u32*)buffer)[0x01] = 0x20;					//0x04
 	((u32*)buffer)[0x02] = 0;						//0x08
 	((u32*)buffer)[0x03] = 0x2A4;					//0x0C 
@@ -307,9 +307,9 @@ void LoadWiiGame()		// DVD Loader! HUGE thanks to crediar who did absolutely all
 	((u32*)buffer)[0x05] = 0;						//0x14
 
 	//out
-	((u32*)buffer)[0x06] = PHYSADDR(buffer+0x380);	//0x18
+	((u32*)buffer)[0x00] = *((unsigned long *)(0x7FFFFFFF & ((unsigned long)(buffer+0x380))));
 	((u32*)buffer)[0x07] = 0x49E4;					//0x1C
-	((u32*)buffer)[0x08] = PHYSADDR(buffer+0x360);	//0x20
+	((u32*)buffer)[0x00] = *((unsigned long *)(0x7FFFFFFF & ((unsigned long)(buffer+0360))));
 	((u32*)buffer)[0x09] = 0x20;					//0x24
 
 	DCFlushRange(buffer, 0x100);
@@ -322,9 +322,9 @@ void LoadWiiGame()		// DVD Loader! HUGE thanks to crediar who did absolutely all
 
 	CheckIPCRetval(DVDLowRead((void*)0x81200000, *(unsigned long*)(buffer+0x14)+*(unsigned long*)(buffer+0x18), 0x2460>>2));
 
-	app_entry = *(unsigned long*)(buffer+0x10);
-	app_entry(&app_init, &app_main, &app_final);
-	app_init(printf);
+	app_entry = (void*)(buffer+0x10);
+	app_entry((void*)&app_init, &app_main, &app_final);
+	app_init((void*)printf);
 
 	void *dst=0;
 	int lenn, offset;
@@ -433,13 +433,13 @@ void LoadGame()
 	DVDLowUnencryptedRead(disc_magic, 4, 0x4FFFC);
 	if (diskid->gamename[0] == 'G')
 	{
-		printf("Disc is gamecube\nMagic is %02%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
+		printf("Disc is gamecube\nMagic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
 		LoadGCGame();
 	}else if(diskid->gamename[0] == 'R' || diskid->gamename[0] == '0' || diskid->gamename[0] == '\x00' || diskid->gamename[0] == '4' || diskid->gamename[0] == '\x04'){
-		printf("Disc is Wii\nMagic is %02%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
+		printf("Disc is Wii\nMagic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
 		LoadWiiGame();
 	}else{
-		printf("Magic is %02%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
+		printf("Magic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
 		LoadWiiGame();
 	}
 }

@@ -12,6 +12,7 @@
 #include <ogc/wiilaunch.h>	
 #include <wiiuse/wpad.h>
 #include <fat.h>
+#include <unistd.h>
 
 #include "general.h"
 #include "screen.h"
@@ -29,7 +30,7 @@ extern int need_sys;
 
 void saveToSD(u32 TitleIDH, u32 TitleIDL, char* titleName, char* subtitleName, char* destdir)
 {
-	u64 TitleID ATTRIBUTE_ALIGN(32) = ((u64)TitleIDH<<32 | (u64)TitleIDL);
+//	u64 TitleID ATTRIBUTE_ALIGN(32) = ((u64)TitleIDH<<32 | (u64)TitleIDL);
 	char path[ISFS_MAXPATH + 1];
 	sprintf(path, "/title/%08x/%08x/data/", TitleIDH, TitleIDL);
 	if(need_sys)
