@@ -86,6 +86,7 @@ void initialize_wiimu()
 	fatInitDefault();
 	
 	Light_Start();
+	SYSCONF_Init();
 	language_setting=SYSCONF_GetLanguage();
 	
 }
