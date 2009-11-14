@@ -1,8 +1,0 @@
-#ifndef _CLEANUP_H
-#define _CLEANUP_H
-
-void Finish(int retval);
-void initialize_wiimu();
-
-#endif //_CLEANUP_H
-

@@ -1,3 +1,0 @@
-extern const u8 factory_mod_end[];
-extern const u8 factory_mod[];
-extern const u32 factory_mod_size;
