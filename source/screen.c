@@ -88,7 +88,8 @@ void initialize_wiimu()
 	Light_Start();
 	SYSCONF_Init();
 	language_setting=SYSCONF_GetLanguage();
-	
+	if ((language_setting < 0) || (language_setting > 6))
+		language_setting = 1;		// English
 }
 
 void getScreenData(void* fb, GXRModeObj* mode)

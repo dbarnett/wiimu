@@ -160,7 +160,7 @@ int main(int argc, char **argv)
  
 		if( redraw )
 		{
-			printf("\x1b[1;0HWiiMU v%d.%d%s (Built %s %s). Current language is: %d\n", VERSION_MAJOR, VERSION_MINOR, SPECIAL_BUILD, __DATE__, __TIME__, language_setting);
+			printf("\x1b[1;0HWiiMU v%d.%d%s (Built %s %s). Current language is: %s\n", VERSION_MAJOR, VERSION_MINOR, SPECIAL_BUILD, __DATE__, __TIME__, lang[language_setting]);
 			printf("    Load Game.\n");
 			printf("    Launch Channel.\n");
 			printf("    Save Manager.\n");

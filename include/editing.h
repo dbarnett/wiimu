@@ -2,6 +2,7 @@
 #define __EDITING_H
 
 extern int language_setting;
+extern char *lang[];
 
 void configuration(void);
 s32 extractChannelContents(u64 titleID, char* location);
