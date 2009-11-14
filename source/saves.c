@@ -73,8 +73,6 @@ void saveToSD(u32 TitleIDH, u32 TitleIDL, char* titleName, char* subtitleName, c
 	}
 
 	free(nbuf);
-	free(ebuf);
-	free(pbuf);
 	for(i=0;i<num;i++)
 	{
 		char* dest_file=calloc(256, sizeof(char));
