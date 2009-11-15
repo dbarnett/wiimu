@@ -46,30 +46,17 @@ int need_sys;
 static int cur_off=0;
 static int redraw=1;
 
-static void select_main_item(void) {
-	redraw=1;
-	ClearScreen();
-	s32 res;
-	if(cur_off == 3) {
-		char *tabnand[] = { "InFeCtUs", "Zestig", "Back" };
-		res = showmenu("\n\nFor what use would you like to back up for:", tabnand, 3, 0, " ->");
-		if(res==0)
-			backupNAND();
-		else if(res==1)
-			backupNANDzestig();
-	}else if(cur_off == 6){
-		char *tabpower[] = { "Return to Wii Menu", "Return to Loader", "Reboot", "Shutdown", "Back" };
-		res = showmenu("\n\nWhat would you like to do:", tabpower, 5, 0, " ->");
-		if(res==0)
-			SYS_ResetSystem(SYS_RETURNTOMENU,0,0);
-		else if(res==1)
-			Finish(0);
-		else if(res==2)
-			SYS_ResetSystem(SYS_RESTART,0,0);
-		else if(res==3)
-			SYS_ResetSystem(SYS_SHUTDOWN,0,0);
-	}
+typedef enum {MAIN_MENU, BACKUP_MENU, EXIT_MENU} menu_t;
+menu_t active_menu = MAIN_MENU;
 
+static void move_cursor(int old_off, int new_off) {
+	if (old_off != -1)
+		printf("\x1b[%d;0H   ", 2+old_off);
+	if (new_off != -1)
+		printf("\x1b[%d;0H ->", 2+new_off);
+}
+
+static void select_main_item(void) {
 	switch(cur_off)
 	{
 		case 0:
@@ -85,9 +72,16 @@ static void select_main_item(void) {
 			break;
 
 		case 3:
+			cur_off = 0;
+			active_menu = BACKUP_MENU;
+			redraw = 1;
 			break;
+
 		case 4:
 			configuration();
+			cur_off = 0;
+			active_menu = MAIN_MENU;
+			redraw = 1;
 			break;
 		
 		case 5:
@@ -95,40 +89,56 @@ static void select_main_item(void) {
 			break;
 		
 		case 6:
+			cur_off = 0;
+			active_menu = EXIT_MENU;
+			redraw = 1;
 			break; 
 
 		default:
 			break;
 	}
-	VIDEO_WaitVSync();
-	ClearScreen();
-	redraw=1;
-	cur_off=0;
 }
 
-static void move_main_cursor(int new_off) {
-	printf("\x1b[%d;0H   ", 2+cur_off);
-	cur_off = new_off;
-	printf("\x1b[%d;0H ->", 2+cur_off);
+void select_exit_menu_item(void) {
+	switch (cur_off) {
+		case 0: SYS_ResetSystem(SYS_RETURNTOMENU,0,0);
+			break;
+		case 1: Finish(0);
+			break;
+		case 2: SYS_ResetSystem(SYS_RESTART,0,0);
+			break;
+		case 3: SYS_ResetSystem(SYS_SHUTDOWN,0,0);
+			break;
+		case 4:
+			cur_off = 0;
+			active_menu = MAIN_MENU;
+			redraw = 1;
+			break;
+		default:
+			break;
+	}
 }
 
-static void draw_main_menu(void) {
-	printf("\x1b[1;2HWiiMU v%d.%d%s (Built %s %s).\n", VERSION_MAJOR, VERSION_MINOR, SPECIAL_BUILD, __DATE__, __TIME__);
-	printf("    Load Game.\n");
-	printf("    Launch Channel.\n");
-	printf("    Save Manager.\n");
-	printf("    Backup NAND.\n");
-	printf("    Configuration.\n");
-	printf("    Credits.\n");
-	printf("    Exit.\n");
-
-	printf("\x1b[%d;%dHCurrent language is: %s", 27, 45, lang[language_setting]);
-
-	move_main_cursor(cur_off);
+void select_backup_menu_item(void) {
+	switch (cur_off) {
+		case 0: backupNAND();
+			break;
+		case 1: backupNANDzestig();
+			break;
+		case 2:
+			cur_off = 0;
+			active_menu = MAIN_MENU;
+			redraw = 1;
+			break;
+		default:
+			break;
+	}
 }
 
 int main(int argc, char **argv)
 {
+	int active_menu_size;
+
 	CheckIOSRetval(__IOS_LaunchNewIOS(35));
 	
 	initialize_wiimu();
@@ -152,20 +162,53 @@ int main(int argc, char **argv)
  
 		if ( (WPAD_Pressed & WPAD_BUTTON_A) || (PAD_Pressed & PAD_BUTTON_A) )
 		{
-			select_main_item();
+			if (active_menu == MAIN_MENU)
+				select_main_item();
+			else if (active_menu == BACKUP_MENU)
+				select_backup_menu_item();
+			else if (active_menu == EXIT_MENU)
+				select_exit_menu_item();
 		}
  
+		switch (active_menu) {
+			case MAIN_MENU: active_menu_size = 7;
+				break;
+			case BACKUP_MENU: active_menu_size = 3;
+				break;
+			case EXIT_MENU: active_menu_size = 5;
+				break;
+		}
 		if ( (WPAD_Pressed & WPAD_BUTTON_DOWN) || (PAD_Pressed & PAD_BUTTON_DOWN) )
 		{
-			move_main_cursor((cur_off+1) % MAIN_MENU_LIST_SIZE);
+			int old_off = cur_off;
+			cur_off = (cur_off+1) % active_menu_size;
+			move_cursor(old_off, cur_off);
 		} else if ( (WPAD_Pressed & WPAD_BUTTON_UP) || (PAD_Pressed & PAD_BUTTON_UP) )
 		{
-			move_main_cursor((cur_off-1+MAIN_MENU_LIST_SIZE)%MAIN_MENU_LIST_SIZE);
+			int old_off = cur_off;
+			cur_off = (cur_off-1+active_menu_size)%active_menu_size;
+			move_cursor(old_off, cur_off);
 		}
  
 		if( redraw )
 		{
-			draw_main_menu();
+			ClearScreen();
+			if (active_menu == MAIN_MENU) {
+				char caption[80];
+				sprintf(caption, "WiiMU v%d.%d%s (Built %s %s).", VERSION_MAJOR, VERSION_MINOR, SPECIAL_BUILD, __DATE__, __TIME__);
+				char *tabmain[] = { "Load Game.", "Launch Channel.", "Save Manager.", "Backup NAND.", "Configuration.", "Credits.", "Exit." };
+				draw_menu(caption, tabmain, 7);
+				printf("\x1b[%d;%dHCurrent language is: %s", 28, 46, lang[language_setting]);
+			}
+			else if (active_menu == BACKUP_MENU) {
+				char *tabnand[] = { "InFeCtUs", "Zestig", "Back" };
+				draw_menu("For what use would you like to back up for:", tabnand, 3);
+			}
+			else if (active_menu == EXIT_MENU) {
+				char *tabpower[] = { "Return to Wii Menu", "Return to Loader", "Reboot", "Shutdown", "Back" };
+				draw_menu("What would you like to do:", tabpower, 5);
+			}
+			move_cursor(-1, cur_off);
 			redraw = 0;
 		}
  

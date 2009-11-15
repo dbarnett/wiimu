@@ -11,6 +11,7 @@ void FadeOut();
 void FadeIn();
 void spinner();
 int showmenu(char *caption, char **ent, int ecnt, int _default, char* selector);
+void draw_menu(const char *caption, char *options[], int n_options);
 
 #endif //_SCREEN_H
 

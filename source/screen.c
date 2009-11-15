@@ -209,6 +209,14 @@ int showmenu(char *caption, char *ent[], int ecnt, int _default, char* selector)
 	return sel;
 }
 
+void draw_menu(const char *caption, char *options[], int n_options) {
+	int i;
+	printf("\x1b[1;2H%s\n", caption);
+	for (i = 0; i < n_options; ++i) {
+		printf("   %s\n", options[i]);
+	}
+}
+
 //Borrowed from bushing's patchmii_core.
 char spinner_chars[] = "/-\\|";
 int spin = 0;
