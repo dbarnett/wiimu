@@ -3,6 +3,7 @@
 
 void credits();
 int chk_credits(void);
+void cancel_credits(void);
 
 #endif //__CREDITS_H
 

@@ -92,7 +92,7 @@ static void select_main_item(void) {
 			break;
 		
 		case 6:
-			cur_off = 0;
+			cur_off = 1;
 			active_menu = EXIT_MENU;
 			redraw = 1;
 			break; 
@@ -148,6 +148,8 @@ int main(int argc, char **argv)
 	
 	while(1)
 	{
+		int old_off = cur_off;
+
 		WPAD_ScanPads();
 		PAD_ScanPads();
 		u32 WPAD_Pressed = WPAD_ButtonsDown(0);
@@ -184,9 +186,6 @@ int main(int argc, char **argv)
 			}
 		}
 
-		if (xPAD_Released & WPAD_BUTTON_A)
-			A_button_held = 0;
- 
 		switch (active_menu) {
 			case MAIN_MENU: active_menu_size = 7;
 				break;
@@ -197,18 +196,37 @@ int main(int argc, char **argv)
             case CREDITS_SCREEN: active_menu_size = 0;
                 break;
 		}
-		if ( (WPAD_Pressed & WPAD_BUTTON_DOWN) || (PAD_Pressed & PAD_BUTTON_DOWN) )
+		if ( (WPAD_Pressed & WPAD_BUTTON_B) || (PAD_Pressed & PAD_BUTTON_B) )
 		{
-			int old_off = cur_off;
-			cur_off = (cur_off+1) % active_menu_size;
-			move_cursor(old_off, cur_off);
-		} else if ( (WPAD_Pressed & WPAD_BUTTON_UP) || (PAD_Pressed & PAD_BUTTON_UP) )
-		{
-			int old_off = cur_off;
-			cur_off = (cur_off-1+active_menu_size)%active_menu_size;
-			move_cursor(old_off, cur_off);
+			if ((active_menu == MAIN_MENU) || (active_menu == BACKUP_MENU) || (active_menu == EXIT_MENU))
+				cur_off = active_menu_size - 1;
+			else if (active_menu == CREDITS_SCREEN) {
+				cancel_credits();
+				cur_off = 0;
+				active_menu = MAIN_MENU;
+				redraw = 1;
+			}
 		}
+
+		if (xPAD_Released & WPAD_BUTTON_A)
+			A_button_held = 0;
  
+		switch (active_menu) {
+			case MAIN_MENU:
+			case BACKUP_MENU:
+			case EXIT_MENU:
+				if ( (WPAD_Pressed & WPAD_BUTTON_DOWN) || (PAD_Pressed & PAD_BUTTON_DOWN) )
+					cur_off = (cur_off+1) % active_menu_size;
+				else if ( (WPAD_Pressed & WPAD_BUTTON_UP) || (PAD_Pressed & PAD_BUTTON_UP) )
+					cur_off = (cur_off-1+active_menu_size)%active_menu_size;
+				if (old_off != cur_off)
+					move_cursor(old_off, cur_off);
+				break;
+			case CREDITS_SCREEN:
+				break;
+			default:
+				break;
+		}
 		chk_credits();
 		if( redraw )
 		{

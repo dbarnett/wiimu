@@ -111,6 +111,11 @@ int chk_credits(void) {
 	return 1;
 }
 
+void cancel_credits(void) {
+	credits_cursor = NULL;
+	chk_credits();
+}
+
 static struct timespec credits_start = {0, 0};
 static struct timespec credits_tick = {0, 75000000L};
 
