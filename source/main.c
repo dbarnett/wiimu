@@ -46,7 +46,9 @@ int need_sys;
 static int cur_off=0;
 static int redraw=1;
 
-typedef enum {MAIN_MENU, BACKUP_MENU, EXIT_MENU} menu_t;
+volatile int A_button_held = 0;
+
+typedef enum {MAIN_MENU, BACKUP_MENU, EXIT_MENU, CREDITS_SCREEN} menu_t;
 menu_t active_menu = MAIN_MENU;
 
 static void move_cursor(int old_off, int new_off) {
@@ -86,6 +88,7 @@ static void select_main_item(void) {
 		
 		case 5:
 			credits();
+            active_menu = CREDITS_SCREEN;
 			break;
 		
 		case 6:
@@ -157,18 +160,32 @@ int main(int argc, char **argv)
 		PAD_Pressed  |= PAD_ButtonsDown(2);
 		PAD_Pressed  |= PAD_ButtonsDown(3);
 
+		u32 xPAD_Released = (WPAD_ButtonsUp(0) | WPAD_ButtonsUp(1) | WPAD_ButtonsUp(2) | WPAD_ButtonsUp(3) | 
+				PAD_ButtonsUp(0) | PAD_ButtonsUp(1) | PAD_ButtonsUp(2) | PAD_ButtonsUp(3));
+
 		if ( (WPAD_Pressed & WPAD_BUTTON_HOME) || (PAD_Pressed & PAD_BUTTON_START) )
 			exit(0);
  
 		if ( (WPAD_Pressed & WPAD_BUTTON_A) || (PAD_Pressed & PAD_BUTTON_A) )
 		{
+            A_button_held = 1;
 			if (active_menu == MAIN_MENU)
 				select_main_item();
 			else if (active_menu == BACKUP_MENU)
 				select_backup_menu_item();
 			else if (active_menu == EXIT_MENU)
 				select_exit_menu_item();
+			else if (active_menu == CREDITS_SCREEN) {
+				if (chk_credits() == 0) {
+					cur_off = 0;
+					active_menu = MAIN_MENU;
+					redraw = 1;
+				}
+			}
 		}
+
+		if (xPAD_Released & WPAD_BUTTON_A)
+			A_button_held = 0;
  
 		switch (active_menu) {
 			case MAIN_MENU: active_menu_size = 7;
@@ -177,6 +194,8 @@ int main(int argc, char **argv)
 				break;
 			case EXIT_MENU: active_menu_size = 5;
 				break;
+            case CREDITS_SCREEN: active_menu_size = 0;
+                break;
 		}
 		if ( (WPAD_Pressed & WPAD_BUTTON_DOWN) || (PAD_Pressed & PAD_BUTTON_DOWN) )
 		{
@@ -190,6 +209,7 @@ int main(int argc, char **argv)
 			move_cursor(old_off, cur_off);
 		}
  
+		chk_credits();
 		if( redraw )
 		{
 			ClearScreen();

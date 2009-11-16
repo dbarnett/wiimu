@@ -2,6 +2,7 @@
 #define __CREDITS_H
 
 void credits();
+int chk_credits(void);
 
 #endif //__CREDITS_H
 
