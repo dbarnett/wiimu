@@ -43,13 +43,9 @@ int LoadGCGame()		// HUGE THANKS to emu_kidid who wrote this.
 {
 	printf("\nGCBooter v1.0\n");
 	
-	printf("Please Insert a Nintendo Gamecube Disk and then press A.\n");
-	wait_press_A();
-	
-	CheckIPCRetval(DVDInit());
 	CheckIPCRetval(DVDLowReset());
-	CheckIPCRetval(DVDLowReadDiskID((void*)0x80000000));
-	
+	dvddiskid *diskid = (dvddiskid *)0x80000000;
+	CheckIPCRetval(DVDLowReadDiskID( diskid ));
 	printf("Launching Game...\n");
 	*(volatile unsigned int *)0xCC003024 |= 7;
 	
@@ -424,7 +420,7 @@ void LoadGame()
 		IOS_Close(DVDGetHandle());
 		return;
 	}
-	printf("\n\nDisc found! ");
+	printf("\n\nDisc found!\n");
 
 	CheckIPCRetval(DVDLowReset());
 	dvddiskid *diskid = (dvddiskid *)0x80000000;
@@ -433,13 +429,13 @@ void LoadGame()
 	DVDLowUnencryptedRead(disc_magic, 4, 0x4FFFC);
 	if (diskid->gamename[0] == 'G')
 	{
-		printf("Disc is gamecube\nMagic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
+		printf("Disc is gamecube\n");
+		printf("Magic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(2);
 		LoadGCGame();
-	}else if(diskid->gamename[0] == 'R' || diskid->gamename[0] == '0' || diskid->gamename[0] == '\x00' || diskid->gamename[0] == '4' || diskid->gamename[0] == '\x04'){
-		printf("Disc is Wii\nMagic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
-		LoadWiiGame();
-	}else{
-		printf("Magic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(5);
+	} else {
+		if(diskid->gamename[0] == 'R' || diskid->gamename[0] == '0' || diskid->gamename[0] == '\x00' || diskid->gamename[0] == '4' || diskid->gamename[0] == '\x04')
+			printf("Disc is Wii\n");
+		printf("Magic is %02x%02x%02x%02x\n", disc_magic[0], disc_magic[1], disc_magic[2], disc_magic[3]);sleep(2);
 		LoadWiiGame();
 	}
 }
