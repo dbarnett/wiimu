@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
+#include <assert.h>
 #include <ogcsys.h>
 #include <gccore.h>
 #include <ogc/system.h>
@@ -9,6 +10,7 @@
 
 #include "credits.h"
 #include "screen.h"
+#include "controls.h"
 
 extern volatile int A_button_held;
 
@@ -111,9 +113,40 @@ int chk_credits(void) {
 	return 1;
 }
 
-void cancel_credits(void) {
+static void finish_credits(void) {
+	load_menu(MAIN_MENU);
+}
+
+static void cancel_credits(void) {
 	credits_cursor = NULL;
 	chk_credits();
+	finish_credits();
+}
+
+int credits_controls(button_t button, int source, int is_pressed) {
+	if (!is_pressed)
+		return 1;
+
+	switch (button) {
+		case A_BUTTON:
+			if (chk_credits() == 0) {
+				finish_credits();
+			}
+			break;
+		case B_BUTTON:
+			cancel_credits();
+			break;
+        case UP_BUTTON:
+        case DOWN_BUTTON:
+        case LEFT_BUTTON:
+        case RIGHT_BUTTON:
+            break;
+        case HOME_BUTTON:
+        case START_BUTTON:
+            return 0;
+	}
+
+    return 1;
 }
 
 static struct timespec credits_start = {0, 0};

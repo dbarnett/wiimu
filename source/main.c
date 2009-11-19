@@ -13,7 +13,6 @@
 #include <ogc/ios.h>
 #include <ogc/dvd.h>
 #include <ogc/wiilaunch.h>	
-#include <wiiuse/wpad.h>
 #include <fat.h>
 #include <gcmodplay.h>
 
@@ -36,20 +35,16 @@
 #include "factory_mod.h"
 #include "editing.h"
 #include "updater.h"
-
-extern const u8 tvaettbj0rn_mod_end[];
-extern const u8 tvaettbj0rn_mod[];
-extern const u32 tvaettbj0rn_mod_size;
+#include "controls.h"
 
 int need_sys;
 
 static int cur_off=0;
 static int redraw=1;
 
-volatile int A_button_held = 0;
-
-typedef enum {MAIN_MENU, BACKUP_MENU, EXIT_MENU, CREDITS_SCREEN} menu_t;
 menu_t active_menu = MAIN_MENU;
+
+static int submenu_handler_id = -1;
 
 static void move_cursor(int old_off, int new_off) {
 	if (old_off != -1)
@@ -74,27 +69,20 @@ static void select_main_item(void) {
 			break;
 
 		case 3:
-			cur_off = 0;
-			active_menu = BACKUP_MENU;
-			redraw = 1;
+			load_menu(BACKUP_MENU);
 			break;
 
 		case 4:
-			configuration();
-			cur_off = 0;
-			active_menu = MAIN_MENU;
-			redraw = 1;
+			load_menu(CONFIGURATION_MENU);
+			load_menu(MAIN_MENU);
 			break;
 		
 		case 5:
-			credits();
-            active_menu = CREDITS_SCREEN;
+            load_menu(CREDITS_SCREEN);
 			break;
 		
 		case 6:
-			cur_off = 1;
-			active_menu = EXIT_MENU;
-			redraw = 1;
+			load_menu(EXIT_MENU);
 			break; 
 
 		default:
@@ -113,9 +101,7 @@ void select_exit_menu_item(void) {
 		case 3: SYS_ResetSystem(SYS_SHUTDOWN,0,0);
 			break;
 		case 4:
-			cur_off = 0;
-			active_menu = MAIN_MENU;
-			redraw = 1;
+			load_menu(MAIN_MENU);
 			break;
 		default:
 			break;
@@ -129,106 +115,158 @@ void select_backup_menu_item(void) {
 		case 1: backupNANDzestig();
 			break;
 		case 2:
-			cur_off = 0;
-			active_menu = MAIN_MENU;
-			redraw = 1;
+			load_menu(MAIN_MENU);
 			break;
 		default:
 			break;
 	}
 }
 
+#define MAIN_MENU_SIZE 7
+
+int main_controls(button_t button, int source, int is_pressed) {
+	int old_off = cur_off;
+
+	if (!is_pressed)
+		return 1;
+
+	switch (button) {
+		case A_BUTTON:
+			select_main_item();
+			break;
+		case B_BUTTON:
+			cur_off = MAIN_MENU_SIZE - 1;
+			break;
+		case UP_BUTTON:
+			cur_off = (cur_off - 1 + MAIN_MENU_SIZE) % MAIN_MENU_SIZE;
+			break;
+		case DOWN_BUTTON:
+			cur_off = (cur_off + 1) % MAIN_MENU_SIZE;
+			break;
+        case LEFT_BUTTON:
+        case RIGHT_BUTTON:
+            break;
+		case HOME_BUTTON:
+		case START_BUTTON:
+			exit(0);
+			break;
+	}
+
+	move_cursor(old_off, cur_off);
+	return 1;
+}
+
+#define BACKUP_MENU_SIZE 3
+
+int backup_menu_controls(button_t button, int source, int is_pressed) {
+	int old_off = cur_off;
+
+	if (!is_pressed)
+		return 1;
+
+	switch (button) {
+		case A_BUTTON:
+			select_backup_menu_item();
+			break;
+		case B_BUTTON:
+			cur_off = BACKUP_MENU_SIZE - 1;
+			break;
+		case UP_BUTTON:
+			cur_off = (cur_off - 1 + BACKUP_MENU_SIZE) % BACKUP_MENU_SIZE;
+			break;
+		case DOWN_BUTTON:
+			cur_off = (cur_off + 1) % BACKUP_MENU_SIZE;
+			break;
+        case LEFT_BUTTON:
+        case RIGHT_BUTTON:
+            break;
+		case HOME_BUTTON:
+		case START_BUTTON:
+			return 0;
+	}
+
+	move_cursor(old_off, cur_off);
+	return 1;
+}
+
+#define EXIT_MENU_SIZE 5
+
+int exit_menu_controls(button_t button, int source, int is_pressed) {
+	int old_off = cur_off;
+
+	if (!is_pressed)
+		return 1;
+
+	switch (button) {
+		case A_BUTTON:
+			select_exit_menu_item();
+			break;
+		case UP_BUTTON:
+			cur_off = (cur_off - 1 + EXIT_MENU_SIZE) % EXIT_MENU_SIZE;
+			break;
+		case DOWN_BUTTON:
+			cur_off = (cur_off + 1) % EXIT_MENU_SIZE;
+			break;
+        case LEFT_BUTTON:
+        case RIGHT_BUTTON:
+            break;
+		case B_BUTTON:
+			cur_off = EXIT_MENU_SIZE - 1;
+			break;
+		case HOME_BUTTON:
+		case START_BUTTON:
+			return 0;
+	}
+
+	move_cursor(old_off, cur_off);
+	return 1;
+}
+
+void load_menu(menu_t menu) {
+	if (active_menu == menu)
+		return;
+	if (submenu_handler_id != -1)
+		remove_handler(submenu_handler_id);
+	switch (menu) {
+		case BACKUP_MENU:
+			cur_off = 0;
+			submenu_handler_id = add_handler(backup_menu_controls);
+			break;
+		case EXIT_MENU:
+			cur_off = 1;
+			submenu_handler_id = add_handler(exit_menu_controls);
+			break;
+		case CREDITS_SCREEN:
+			submenu_handler_id = add_handler(credits_controls);
+			credits();
+			break;
+		case MAIN_MENU:
+			cur_off = 0;
+			break;
+		case CONFIGURATION_MENU:
+			configuration();
+			break;
+	}
+	active_menu = menu;
+	redraw = 1;
+    return;
+}
+
 int main(int argc, char **argv)
 {
-	int active_menu_size;
+	add_handler(main_controls);
 
 	CheckIOSRetval(__IOS_LaunchNewIOS(35));
 	
 	initialize_wiimu();
-	
+
 	while(1)
 	{
-		int old_off = cur_off;
+		check_controls();
 
-		WPAD_ScanPads();
-		PAD_ScanPads();
-		u32 WPAD_Pressed = WPAD_ButtonsDown(0);
-		WPAD_Pressed |= WPAD_ButtonsDown(1);
-		WPAD_Pressed |= WPAD_ButtonsDown(2);
-		WPAD_Pressed |= WPAD_ButtonsDown(3);
-
-		u32 PAD_Pressed  = PAD_ButtonsDown(0);
-		PAD_Pressed  |= PAD_ButtonsDown(1);
-		PAD_Pressed  |= PAD_ButtonsDown(2);
-		PAD_Pressed  |= PAD_ButtonsDown(3);
-
-		u32 xPAD_Released = (WPAD_ButtonsUp(0) | WPAD_ButtonsUp(1) | WPAD_ButtonsUp(2) | WPAD_ButtonsUp(3) | 
-				PAD_ButtonsUp(0) | PAD_ButtonsUp(1) | PAD_ButtonsUp(2) | PAD_ButtonsUp(3));
-
-		if ( (WPAD_Pressed & WPAD_BUTTON_HOME) || (PAD_Pressed & PAD_BUTTON_START) )
-			exit(0);
- 
-		if ( (WPAD_Pressed & WPAD_BUTTON_A) || (PAD_Pressed & PAD_BUTTON_A) )
-		{
-            A_button_held = 1;
-			if (active_menu == MAIN_MENU)
-				select_main_item();
-			else if (active_menu == BACKUP_MENU)
-				select_backup_menu_item();
-			else if (active_menu == EXIT_MENU)
-				select_exit_menu_item();
-			else if (active_menu == CREDITS_SCREEN) {
-				if (chk_credits() == 0) {
-					cur_off = 0;
-					active_menu = MAIN_MENU;
-					redraw = 1;
-				}
-			}
-		}
-
-		switch (active_menu) {
-			case MAIN_MENU: active_menu_size = 7;
-				break;
-			case BACKUP_MENU: active_menu_size = 3;
-				break;
-			case EXIT_MENU: active_menu_size = 5;
-				break;
-            case CREDITS_SCREEN: active_menu_size = 0;
-                break;
-		}
-		if ( (WPAD_Pressed & WPAD_BUTTON_B) || (PAD_Pressed & PAD_BUTTON_B) )
-		{
-			if ((active_menu == MAIN_MENU) || (active_menu == BACKUP_MENU) || (active_menu == EXIT_MENU))
-				cur_off = active_menu_size - 1;
-			else if (active_menu == CREDITS_SCREEN) {
-				cancel_credits();
-				cur_off = 0;
-				active_menu = MAIN_MENU;
-				redraw = 1;
-			}
-		}
-
-		if (xPAD_Released & WPAD_BUTTON_A)
-			A_button_held = 0;
- 
-		switch (active_menu) {
-			case MAIN_MENU:
-			case BACKUP_MENU:
-			case EXIT_MENU:
-				if ( (WPAD_Pressed & WPAD_BUTTON_DOWN) || (PAD_Pressed & PAD_BUTTON_DOWN) )
-					cur_off = (cur_off+1) % active_menu_size;
-				else if ( (WPAD_Pressed & WPAD_BUTTON_UP) || (PAD_Pressed & PAD_BUTTON_UP) )
-					cur_off = (cur_off-1+active_menu_size)%active_menu_size;
-				if (old_off != cur_off)
-					move_cursor(old_off, cur_off);
-				break;
-			case CREDITS_SCREEN:
-				break;
-			default:
-				break;
-		}
 		chk_credits();
-		if( redraw )
+
+		if ((redraw) && (active_menu != CREDITS_SCREEN))
 		{
 			ClearScreen();
 			if (active_menu == MAIN_MENU) {
