@@ -40,13 +40,13 @@
 int need_sys;
 
 static int cur_off=0;
-static int redraw=1;
+int redraw=1;
 
 menu_t active_menu = MAIN_MENU;
 
 static int submenu_handler_id = -1;
 
-static void move_cursor(int old_off, int new_off) {
+void move_cursor(int old_off, int new_off) {
 	if (old_off != -1)
 		printf("\x1b[%d;0H   ", 2+old_off);
 	if (new_off != -1)
@@ -252,6 +252,32 @@ void load_menu(menu_t menu) {
     return;
 }
 
+void draw_active_menu(void) {
+	if (active_menu == CREDITS_SCREEN)
+		draw_credits();
+	else if (redraw)
+	{
+		ClearScreen();
+		if (active_menu == MAIN_MENU) {
+			char caption[80];
+			sprintf(caption, "WiiMU v%d.%d%s (Built %s %s).", VERSION_MAJOR, VERSION_MINOR, SPECIAL_BUILD, __DATE__, __TIME__);
+			char *tabmain[] = { "Load Game.", "Launch Channel.", "Save Manager.", "Backup NAND.", "Configuration.", "Credits.", "Exit." };
+			draw_menu(caption, tabmain, 7);
+			printf("\x1b[%d;%dHCurrent language is: %s", 28, 46, lang[language_setting]);
+		}
+		else if (active_menu == BACKUP_MENU) {
+			char *tabnand[] = { "InFeCtUs", "Zestig", "Back" };
+			draw_menu("For what use would you like to back up for:", tabnand, 3);
+		}
+		else if (active_menu == EXIT_MENU) {
+			char *tabpower[] = { "Return to Wii Menu", "Return to Loader", "Reboot", "Shutdown", "Back" };
+			draw_menu("What would you like to do:", tabpower, 5);
+		}
+		move_cursor(-1, cur_off);
+		redraw = 0;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	add_handler(main_controls);
@@ -264,30 +290,8 @@ int main(int argc, char **argv)
 	{
 		check_controls();
 
-		chk_credits();
+		draw_active_menu();
 
-		if ((redraw) && (active_menu != CREDITS_SCREEN))
-		{
-			ClearScreen();
-			if (active_menu == MAIN_MENU) {
-				char caption[80];
-				sprintf(caption, "WiiMU v%d.%d%s (Built %s %s).", VERSION_MAJOR, VERSION_MINOR, SPECIAL_BUILD, __DATE__, __TIME__);
-				char *tabmain[] = { "Load Game.", "Launch Channel.", "Save Manager.", "Backup NAND.", "Configuration.", "Credits.", "Exit." };
-				draw_menu(caption, tabmain, 7);
-				printf("\x1b[%d;%dHCurrent language is: %s", 28, 46, lang[language_setting]);
-			}
-			else if (active_menu == BACKUP_MENU) {
-				char *tabnand[] = { "InFeCtUs", "Zestig", "Back" };
-				draw_menu("For what use would you like to back up for:", tabnand, 3);
-			}
-			else if (active_menu == EXIT_MENU) {
-				char *tabpower[] = { "Return to Wii Menu", "Return to Loader", "Reboot", "Shutdown", "Back" };
-				draw_menu("What would you like to do:", tabpower, 5);
-			}
-			move_cursor(-1, cur_off);
-			redraw = 0;
-		}
- 
 		VIDEO_WaitVSync();
 	}
 	Finish(0);

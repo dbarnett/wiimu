@@ -26,6 +26,69 @@
 #include "screen.h"
 #include "rethandle.h"
 #include "pretty.h"
+#include "controls.h"
+
+/* Note: In order to continue right where it left off after an error, the
+ *       error menu needs to spin off its own "main loop" (or make better
+ *       use of threading). */
+static int cursor_pos;
+static volatile int error_option_selected;
+
+extern int redraw;
+void draw_active_menu(void);
+void move_cursor(int old_pos, int new_pos);
+
+#define ERROR_MENU_SIZE 4
+static char *error_menu_options[] = {"Attempt to Continue", "Quit to loader", "Reboot", "Shutdown"};
+
+int error_menu_controls(button_t button, int source, int is_press) {
+	if (!is_press)
+		return 1;
+
+	switch (button) {
+		case A_BUTTON:
+			error_option_selected = 1;
+			break;
+		case B_BUTTON:
+			cursor_pos = 1;
+			break;
+		case UP_BUTTON:
+			cursor_pos = (cursor_pos - 1 + ERROR_MENU_SIZE) % ERROR_MENU_SIZE;
+			break;
+		case DOWN_BUTTON:
+			cursor_pos = (cursor_pos + 1) % ERROR_MENU_SIZE;
+			break;
+		case LEFT_BUTTON:
+		case RIGHT_BUTTON:
+			break;
+		case HOME_BUTTON:
+		case START_BUTTON:
+			return 0;
+	}
+
+	return 1;
+}
+
+int error_prompt(void) {
+	error_option_selected = 0;
+	cursor_pos = 0;
+	ClearScreen();
+	char caption[100] = "An error occured, what would you like to do:";
+	draw_menu(caption, error_menu_options, ERROR_MENU_SIZE);
+	move_cursor(-1, cursor_pos);
+	int handler_id = add_handler(error_menu_controls);
+	while (error_option_selected == 0) {
+		int old_pos = cursor_pos;
+		check_controls();
+		if (cursor_pos != old_pos)
+			move_cursor(old_pos, cursor_pos);
+		VIDEO_WaitVSync();
+	}
+	remove_handler(handler_id);
+	redraw = 1;
+	draw_active_menu();
+	return cursor_pos;
+}
 
 void RetvalFail(int badness)
 {
@@ -38,9 +101,7 @@ void RetvalFail(int badness)
 	WIILIGHT_SetLevel((255/4)*1);
 	sleep(1);
 	WIILIGHT_SetLevel(0);
-	char *tab[] = {"Attempt to Continue", "Quit to loader", "Reboot", "Shutdown"};
-	char cap[100]; sprintf(cap, "\nAn error occured, what would you like to do:");
-	s32 res = showmenu(cap, tab, 4, badness, " ->");
+	int res = error_prompt();
 	switch(res)
 	{
 		case 1:

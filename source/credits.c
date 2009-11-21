@@ -101,6 +101,12 @@ int chk_credits(void) {
 		SYS_RemoveAlarm(credits_alarm);
 		return 0;
 	}
+	return 1;
+}
+
+void draw_credits(void) {
+	if (chk_credits() == 0)
+		return;
 	if (credits_time - last_credits_time >= (*credits_cursor).scroll_delay) {
 		last_credits_time += (*credits_cursor).scroll_delay;
 		if (credits_cursor == credits_data) {		// drawing first line
@@ -110,7 +116,6 @@ int chk_credits(void) {
 		printf("%s\n", (*credits_cursor).line);
 		++credits_cursor;
 	}
-	return 1;
 }
 
 static void finish_credits(void) {
